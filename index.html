@@ -385,7 +385,19 @@ phoneInput.addEventListener("input", () => {
     .replace(/[^0-9]/g, "")
     .slice(0, 10);
 });
+form.addEventListener("reset", () => {
+  // Clear all error messages
+  document.querySelectorAll(".error").forEach(err => {
+    err.textContent = "";
+  });
 
+  // Reset step state (optional but recommended)
+  currentStep = 0;
+  isVerifyMode = false;
+  title.textContent = "Registration Form";
+  showStep();
+});
+;
 
 
 </script>

@@ -232,7 +232,7 @@ button.secondary {
   </div>
 
   <div class="buttons" style="margin-top:10px;">
-    <button type="submit" style="width:100%;">Submit</button>
+    <button type="submit" style="width:100%;" >Submit</button>
   </div>
 </div>
 <script>
@@ -240,10 +240,12 @@ const steps = document.querySelectorAll(".step");
 const formSteps = document.querySelectorAll(".form-step");
 const form = document.getElementById("multiForm");
 const title = document.querySelector("h2");
+const phoneInput = document.getElementById("phoneNumber");
 
 let currentStep = 0;
 let isVerifyMode = false;
 
+/* ================= SHOW STEP ================= */
 function showStep() {
   formSteps.forEach((step, i) => {
     step.classList.toggle("active", i === currentStep);
@@ -255,32 +257,69 @@ function showStep() {
   });
 }
 
+/* ================= VALIDATION HELPERS ================= */
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function isValidPhone(phone) {
+  return /^[6-9][0-9]{9}$/.test(phone); // Indian 10-digit
+}
+
+function showError(input, message) {
+  input.nextElementSibling.textContent = message;
+}
+
+function clearError(input) {
+  input.nextElementSibling.textContent = "";
+}
+
+/* ================= STEP VALIDATION ================= */
 function validateStep() {
   let valid = true;
   const inputs = formSteps[currentStep].querySelectorAll("input");
 
   inputs.forEach(input => {
-    const error = input.nextElementSibling;
+    const value = input.value.trim();
 
-    if (input.value.trim() === "") {
-      error.textContent = "This field is required";
+    /* Required validation */
+    if (value === "") {
+      showError(input, "This field is required");
       valid = false;
-    } else {
-      error.textContent = "";
+      return;
     }
 
-    input.addEventListener("input", () => {
-      if (input.value.trim() !== "") {
-        error.textContent = "";
-      }
-    });
+    /* Email validation */
+    if (input.type === "email" && !isValidEmail(value)) {
+      showError(input, "Enter a valid email address");
+      valid = false;
+      return;
+    }
+
+    /* Phone validation */
+    if (input.id === "phoneNumber" && !isValidPhone(value)) {
+      showError(input, "Enter a valid 10-digit phone number");
+      valid = false;
+      return;
+    }
+
+    /* Number validation */
+    if (input.type === "number" && isNaN(value)) {
+      showError(input, "Only numbers allowed");
+      valid = false;
+      return;
+    }
+
+    clearError(input);
   });
 
   return valid;
 }
 
+/* ================= NAVIGATION ================= */
 function nextStep() {
   if (!validateStep()) return;
+
   if (currentStep < formSteps.length - 1) {
     currentStep++;
     showStep();
@@ -294,26 +333,42 @@ function prevStep() {
   }
 }
 
-/* ===== VERIFY FUNCTION ===== */
+/* ================= VERIFY ================= */
 function verifyDetails() {
   isVerifyMode = true;
-  currentStep = 0;
+  currentStep = 0; // ✅ go to start
   title.textContent = "Verify Your Details";
   showStep();
 }
 
-/* ===== FINAL SUBMIT ===== */
+/* ================= SUBMIT ================= */
 form.addEventListener("submit", e => {
   e.preventDefault();
 
-  // Validate all steps before final submit
-  for (let i = 0; i < formSteps.length - 1; i++) {
-    currentStep = i;
-    if (!validateStep()) {
-      showStep();
-      return;
-    }
-  }
+  let allValid = true;
+
+  formSteps.forEach(step => {
+    const inputs = step.querySelectorAll("input");
+
+    inputs.forEach(input => {
+      const value = input.value.trim();
+
+      if (value === "") {
+        showError(input, "This field is required");
+        allValid = false;
+      } else if (input.type === "email" && !isValidEmail(value)) {
+        showError(input, "Enter a valid email address");
+        allValid = false;
+      } else if (input.id === "phoneNumber" && !isValidPhone(value)) {
+        showError(input, "Enter a valid 10-digit phone number");
+        allValid = false;
+      } else {
+        clearError(input);
+      }
+    });
+  });
+
+  if (!allValid) return;
 
   alert("Form Submitted Successfully!");
 
@@ -323,14 +378,13 @@ form.addEventListener("submit", e => {
   title.textContent = "Registration Form";
   showStep();
 });
-const phoneInput = document.getElementById("phoneNumber");
 
+/* ================= PHONE INPUT RESTRICTION ================= */
 phoneInput.addEventListener("input", () => {
   phoneInput.value = phoneInput.value
-    .replace(/[^0-9^+]/g, "")
-    .slice(0, 13); // 10-digit phone number
+    .replace(/[^0-9]/g, "")
+    .slice(0, 10);
 });
-
 
 
 
